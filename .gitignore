@@ -1,2 +1,5 @@
-forecasting-rates/COVID-19
-forecasting-rates/profilings
+forecasting/.ipynb_checkpoints
+forecasting/__pycache__
+forecasting/COVID-19
+forecasting/no-tracking
+forecasting/profilings
