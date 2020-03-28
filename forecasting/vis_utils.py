@@ -22,7 +22,6 @@ def bar_plot(top_indexes, sum_tops_df):
     fig.show()
     plot(fig)
 
-
 #%%
 def timeseries_plot(df, title, start_date='1/22/20'):
   # df = tops_confirmed_df
@@ -51,6 +50,7 @@ def timeseries_plot(df, title, start_date='1/22/20'):
   fig.show()
   plot(fig)
 
+#%%
 def timeseries_plot_since(df, title, start_dates, durations):
   # df = tops_confirmed_df
   # title = 'Confirmed'
@@ -78,7 +78,6 @@ def timeseries_plot_since(df, title, start_dates, durations):
   fig.show()
   plot(fig)
 
-
 #%%
 def growth_plot(df, title, delta_t):
   # df = tops_confirmed_speed
@@ -105,7 +104,7 @@ def growth_plot(df, title, delta_t):
   fig.show()
   plot(fig)
 
-
+#%%
 def growth_plot_since(df, title, delta_t):
   # df = tops_confirmed_speed
   # title = 'Confirmed'
@@ -132,86 +131,78 @@ def growth_plot_since(df, title, delta_t):
   plot(fig)
   
 #%%
-def land_plot(confirmed, deceased, recovered, confirmed_speed, deceased_speed, recovered_speed,
-              confirmed_mean, deceased_mean, recovered_mean, confirmed_speed_mean, deceased_speed_mean, recovered_speed_mean,
-              land='Iran'):
+def land_plot(land_since_df, land='Iran'):
   
   fig = make_subplots(rows=2, cols=1)
-  fig.add_trace(go.Scatter(x=confirmed.columns[1:],
-                           y=confirmed.iloc[:,1:].values[0],
+  xdata = land_since_df.index
+  fig.add_trace(go.Scatter(x=xdata, y=land_since_df['Confirmed'].values,
                            name='Confirmed', opacity=0.8, mode='lines', line = dict(color='royalblue')), row=1, col=1)
   
-  fig.add_trace(go.Scatter(x=deceased.columns[1:],
-                           y=deceased.iloc[:,1:].values[0],
-                           name='Deceased', opacity=0.8, mode='lines', line = dict(color='firebrick')), row=1, col=1)
+  fig.add_trace(go.Scatter(x=xdata, y=land_since_df['Recovered'],
+                           name='Recovered', opacity=0.8, mode='lines', line = dict(color='firebrick')), row=1, col=1)
 
-  fig.add_trace(go.Scatter(x=recovered.columns[1:],
-                           y=recovered.iloc[:,1:].values[0],
-                           name='Recovered', opacity=0.8, mode='lines', line = dict(color='green')), row=1, col=1)
+  fig.add_trace(go.Scatter(x=xdata, y=land_since_df['Deceased'],
+                           name='Deceased', opacity=0.8, mode='lines', line = dict(color='green')), row=1, col=1)
 
-  fig.add_trace(go.Scatter(x=confirmed_speed.columns[1:],
-                           y=confirmed_speed.iloc[:,1:].values[0],
+  fig.add_trace(go.Scatter(x=xdata, y=land_since_df['Confirmed Growth'].values,
                            name='Confirmed Speed', opacity=0.8, mode='lines', line = dict(color='royalblue')), row=2, col=1)
   
-  fig.add_trace(go.Scatter(x=deceased_speed.columns[1:],
-                           y=deceased_speed.iloc[:,1:].values[0],
-                           name='Deceased Speed', opacity=0.8, mode='lines', line = dict(color='firebrick')), row=2, col=1)
+  fig.add_trace(go.Scatter(x=xdata, y=land_since_df['Recovered Growth'].values,
+                           name='Recovered Growth', opacity=0.8, mode='lines', line = dict(color='firebrick')), row=2, col=1)
   
-  fig.add_trace(go.Scatter(x=recovered_speed.columns[1:],
-                           y=recovered_speed.iloc[:,1:].values[0],
-                           name='Recovered Speed', opacity=0.8, mode='lines', line = dict(color='green')), row=2, col=1)
+  fig.add_trace(go.Scatter(x=xdata, y=land_since_df['Deceased Growth'].values,
+                           name='Deceased Growth', opacity=0.8, mode='lines', line = dict(color='green')), row=2, col=1)
   
 
   #### Mean
-  dates = confirmed.columns[1:]
-  num_days = len(dates)
-  confirmed_mean_vec = confirmed_mean*np.ones(num_days)
-  deceased_mean_vec = deceased_mean*np.ones(num_days)
-  recovered_mean_vec = recovered_mean*np.ones(num_days)
-  confirmed_speed_mean_vec = confirmed_speed_mean*np.ones(num_days)
-  deceased_speed_mean_vec = deceased_speed_mean*np.ones(num_days)
-  recovered_speed_mean_vec = recovered_speed_mean*np.ones(num_days)
+  mean_confirmed = land_since_df.describe().mean()[0]
+  mean_recovered = land_since_df.describe().mean()[1]
+  mean_deceased = land_since_df.describe().mean()[2]
+  mean_confirmed_growth = land_since_df.describe().mean()[3]
+  mean_recovered_growth = land_since_df.describe().mean()[4]
+  mean_deceased_growth = land_since_df.describe().mean()[5]
+  
+  num_days = len(xdata)
+  confirmed_mean_vec = mean_confirmed*np.ones(num_days)
+  deceased_mean_vec = mean_recovered*np.ones(num_days)
+  recovered_mean_vec = mean_deceased*np.ones(num_days)
+  confirmed_speed_mean_vec = mean_confirmed_growth*np.ones(num_days)
+  deceased_speed_mean_vec = mean_recovered_growth*np.ones(num_days)
+  recovered_speed_mean_vec = mean_deceased_growth*np.ones(num_days)
 
-  fig.add_trace(go.Scatter(x=confirmed.columns[1:],
-                           y=confirmed_mean_vec,
+  fig.add_trace(go.Scatter(x=xdata, y=confirmed_mean_vec,
                            name='Confirmed Mean', opacity=0.8, line = dict(color='royalblue', dash='dash')), row=1, col=1)
   
-  fig.add_trace(go.Scatter(x=deceased.columns[1:],
-                           y=deceased_mean_vec,
+  fig.add_trace(go.Scatter(x=xdata, y=deceased_mean_vec,
                            name='Deceased Mean', opacity=0.8, line = dict(color='firebrick', dash='dash')), row=1, col=1)
 
-  fig.add_trace(go.Scatter(x=recovered.columns[1:],
-                           y=recovered_mean_vec,
+  fig.add_trace(go.Scatter(x=xdata, y=recovered_mean_vec,
                            name='Recovered Meam', opacity=0.8, line = dict(color='green', dash='dash')), row=1, col=1)
   
-  fig.add_trace(go.Scatter(x=confirmed_speed.columns[1:],
-                           y=confirmed_speed_mean_vec,
-                           name='Confirmed Speed Mean', opacity=0.8, line = dict(color='royalblue', dash='dash')), row=2, col=1)
+  fig.add_trace(go.Scatter(x=xdata, y=confirmed_speed_mean_vec,
+                           name='Confirmed Growth Mean', opacity=0.8, line = dict(color='royalblue', dash='dash')), row=2, col=1)
   
-  fig.add_trace(go.Scatter(x=deceased_speed.columns[1:],
-                           y=deceased_speed_mean_vec,
-                           name='Deceased Speed Mean', opacity=0.8, line = dict(color='firebrick', dash='dash')), row=2, col=1)
+  fig.add_trace(go.Scatter(x=xdata, y=deceased_speed_mean_vec,
+                           name='Deceased Growth Mean', opacity=0.8, line = dict(color='firebrick', dash='dash')), row=2, col=1)
 
-  fig.add_trace(go.Scatter(x=recovered_speed.columns[1:],
-                           y=recovered_speed_mean_vec,
-                           name='Recovered Speed Meam', opacity=0.8, line = dict(color='green', dash='dash')), row=2, col=1)
+  fig.add_trace(go.Scatter(x=xdata, y=recovered_speed_mean_vec,
+                           name='Recovered Growth Meam', opacity=0.8, line = dict(color='green', dash='dash')), row=2, col=1)
   
   fig.update_layout(title={'text': land, 'y':0.9, 'x':0.5, 'xanchor': 'center', 'yanchor': 'top'})
   fig.show()
-
+  plot(fig)
 
 #%%
-  
-def rate_plot(mortality_rate, recovery_rate, land='Iran'):
+def rate_plot(rates_df, land='Iran'):
   fig = go.Figure()
-  fig.add_trace(go.Scatter(x=mortality_rate.columns[1:],
-                           y=mortality_rate.iloc[:,1:].values[0],
-                           name='Mortality Rate', opacity=0.8, mode='lines', 
-                           line = dict(color='firebrick')))
-  
-  fig.add_trace(go.Scatter(x=recovery_rate.columns[1:],
-                           y=recovery_rate.iloc[:,1:].values[0],
+  xdata = rates_df.index
+  fig.add_trace(go.Scatter(x=xdata, y=rates_df['Recovery'],
                            name='Recovery Rate', opacity=0.8, mode='lines', 
                            line = dict(color='green')))
+
+  fig.add_trace(go.Scatter(x=xdata, y=rates_df['Mortality'],
+                           name='Mortality Rate', opacity=0.8, mode='lines', 
+                           line = dict(color='firebrick')))
   fig.update_layout(title={'text': 'Mortality and Recovery Rates in {}'.format(land), 'y':0.9, 'x':0.5, 'xanchor': 'center', 'yanchor': 'top'})
   fig.show()
+  plot(fig)

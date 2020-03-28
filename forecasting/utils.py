@@ -4,22 +4,75 @@ Created on Sat Mar 28 03:34:01 2020
 
 @author: rkako
 """
+import os
 import numpy as np
 import pandas as pd
+from datetime import datetime
 from pandas_profiling import ProfileReport
 
-if pd_profiler:
+#%%
+def get_data(dataset_dir):
+    confirmed_path = os.path.join(dataset_dir, 'time_series_covid19_confirmed_global.csv')
+    deceased_path = os.path.join(dataset_dir, 'time_series_covid19_deaths_global.csv')
+    recovered_path = os.path.join(dataset_dir, 'time_series_covid19_recovered_global.csv')  
+    
+    confirmed_df = pd.read_csv(confirmed_path, index_col=False)
+    recovered_df = pd.read_csv(recovered_path, index_col=False)
+    deceased_df = pd.read_csv(deceased_path, index_col=False)
+    
+    confirmed_df.drop(columns=['Lat', 'Long', 'Province/State'], inplace=True)
+    recovered_df.drop(columns=['Lat', 'Long', 'Province/State'], inplace=True)
+    deceased_df.drop(columns=['Lat', 'Long', 'Province/State'], inplace=True)
+    
+    
+    confirmed_df = confirmed_df.groupby(['Country/Region']).sum()
+    recovered_df = recovered_df.groupby(['Country/Region']).sum()
+    deceased_df = deceased_df.groupby(['Country/Region']).sum()
+    
+    return confirmed_df, recovered_df, deceased_df
+    
+#%%
+def get_tops(confirmed_df, recovered_df, deceased_df, num_tops):
+
+    sum_confirmed_df = confirmed_df.iloc[:,-1]
+    sum_recovered_df = recovered_df.iloc[:,-1]
+    sum_deceased_df = deceased_df.iloc[:,-1]
+    
+    copy_sum_confirmed_df = sum_confirmed_df.copy()
+    copy_sum_confirmed_df.sort_values(ascending=False, inplace=True)
+    sum_tops_confirmed = copy_sum_confirmed_df.iloc[0:num_tops]
+       
+    sum_others_confirmed = copy_sum_confirmed_df.iloc[num_tops:]
+    
+    top_indexes = sum_tops_confirmed.index
+    other_indexes = sum_others_confirmed.index
+    
+    sum_tops_recovered = sum_recovered_df.drop(other_indexes, axis=0)
+    
+    sum_tops_deceased = sum_deceased_df.drop(other_indexes, axis=0)
+    
+    sum_tops_df = pd.concat([sum_tops_confirmed, sum_tops_recovered, sum_tops_deceased], axis=1, sort=False)
+    sum_tops_df.columns = ['Confirmed', 'Recovered', 'Deceased']
+    
+    tops_confirmed_df = confirmed_df.loc[top_indexes, :]
+    tops_recovered_df = recovered_df.loc[top_indexes, :]
+    tops_deceased_df = deceased_df.loc[top_indexes, :]
+        
+        
+    return top_indexes, sum_tops_df, tops_confirmed_df, tops_recovered_df, tops_deceased_df
+ 
+    #%%
+def get_pd_profiler(global_confirmed_df, global_recovered_df, global_deceased_df, working_dir):
   profile_confirmed = ProfileReport(global_confirmed_df)
   profile_recovered = ProfileReport(global_recovered_df)
   profile_deceased = ProfileReport(global_deceased_df)
-  profile_confirmed.to_file(outputfile=os.path.join(working_dir, "Profiling for Global Confirmed Cases.html"))
-  profile_recovered.to_file(outputfile=os.path.join(working_dir, "Profiling for Global Recovered Cases.html"))
-  profile_deceased.to_file(outputfile=os.path.join(working_dir, "Profiling for Global Deceased Cases.html"))
+  profile_confirmed.to_file(outputfile=os.path.join(working_dir, "./pd_profiling/Profiling for Global Confirmed Cases.html"))
+  profile_recovered.to_file(outputfile=os.path.join(working_dir, "./pd_profiling/Profiling for Global Recovered Cases.html"))
+  profile_deceased.to_file(outputfile=os.path.join(working_dir, "./pd_profiling/Profiling for Global Deceased Cases.html"))
 
-
-
+#%%
 def get_land_since(tops_confirmed_df, tops_recovered_df, 
-                   tops_deceased_df, start_dates, durations, land='Iran', delta_t):
+                   tops_deceased_df, start_dates, durations, delta_t, land='Iran'):
     
   land_confirmed_since_df = tops_confirmed_df.loc[land,:].loc[start_dates[land]:]
   land_recovered_since_df = tops_recovered_df.loc[land,:].loc[start_dates[land]:]
@@ -53,6 +106,7 @@ def get_land_since(tops_confirmed_df, tops_recovered_df,
   
   return land_since_df
 
+#%%
 def find_start_dates(confirmed):
   # very_start_date = confirmed.columns[0]
   very_end_date = confirmed.columns[-1]
@@ -72,6 +126,7 @@ def find_start_dates(confirmed):
       
   return start_dates, durations
 
+#%%
 def get_growth(df, delta_t=1):
   land_names=df.index
   date_cols = df.columns
@@ -91,9 +146,14 @@ def get_growth(df, delta_t=1):
 
   return growth_df
 
-
-def get_mortality_recovery_rates(confirmed1, deceased1, recovered1):
-  mortality_rate = pd.DataFrame(deceased1.iloc[:,1:].values / confirmed1.iloc[:,1:].values, columns=confirmed1.columns[1:])
-  recovery_rate = pd.DataFrame(recovered1.iloc[:,1:].values / confirmed1.iloc[:,1:].values , columns=confirmed1.columns[1:])
-
-  return mortality_rate, recovery_rate
+#%%
+def get_recovery_mortality_rates(land_since_df):
+  confirmed1 = land_since_df['Confirmed']
+  recovered1 = land_since_df['Recovered']
+  deceased1 = land_since_df['Deceased']
+  recovery_rate = recovered1 / confirmed1
+  mortality_rate = deceased1 / confirmed1
+  
+  rates_df = pd.DataFrame({ 'Recovery': recovery_rate, 'Mortality': mortality_rate})
+  
+  return rates_df
