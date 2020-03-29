@@ -5,4 +5,8 @@ forecasting/no-tracking
 forecasting/pd_profilings
 forecasting/*.html
 
+image-processing/covid-chestxray-dataset
+image-processing/logs
+image-processing/itsloader.py
+
 *.html
